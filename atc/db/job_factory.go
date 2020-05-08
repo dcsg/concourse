@@ -21,12 +21,14 @@ type JobFactory interface {
 type jobFactory struct {
 	conn        Conn
 	lockFactory lock.LockFactory
+	eventStore  EventStore
 }
 
-func NewJobFactory(conn Conn, lockFactory lock.LockFactory) JobFactory {
+func NewJobFactory(conn Conn, lockFactory lock.LockFactory, eventStore EventStore) JobFactory {
 	return &jobFactory{
 		conn:        conn,
 		lockFactory: lockFactory,
+		eventStore:  eventStore,
 	}
 }
 
@@ -92,7 +94,7 @@ func (j *jobFactory) JobsToSchedule() (Jobs, error) {
 		return nil, err
 	}
 
-	return scanJobs(j.conn, j.lockFactory, rows)
+	return scanJobs(j.conn, j.lockFactory, j.eventStore, rows)
 }
 
 type dashboardFactory struct {

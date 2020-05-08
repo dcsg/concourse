@@ -186,8 +186,8 @@ type build struct {
 	completed bool
 }
 
-func newEmptyBuild(conn Conn, lockFactory lock.LockFactory) *build {
-	return &build{pipelineRef: pipelineRef{conn: conn, lockFactory: lockFactory}}
+func newEmptyBuild(conn Conn, lockFactory lock.LockFactory, eventStore EventStore) *build {
+	return &build{pipelineRef: newEmptyPipelineRef(conn, lockFactory, eventStore)}
 }
 
 var ErrBuildDisappeared = errors.New("build disappeared from db")
@@ -693,7 +693,7 @@ func (b *build) Preparation() (BuildPreparation, bool, error) {
 		maxInFlightReachedStatus = BuildPreparationStatusBlocking
 	}
 
-	tf := NewTeamFactory(b.conn, b.lockFactory)
+	tf := NewTeamFactory(b.conn, b.lockFactory, b.eventStore)
 	t, found, err := tf.FindTeam(b.teamName)
 	if err != nil {
 		return BuildPreparation{}, false, err
